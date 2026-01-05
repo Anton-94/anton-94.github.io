@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Lista zakupów</title>
+
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="card">
+    <h1>Lista zakupów</h1>
+
+    <div class="row">
+        <input id="itemInput" type="text" placeholder="Np. mleko" autocomplete="off" />
+        <button id="addBtn">Dodaj</button>
+    </div>
+
+    <ul id="list"></ul>
+
+    <p class="hint">Tip: kliknij element, żeby go usunąć.</p>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
