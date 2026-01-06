@@ -1,7 +1,7 @@
 {
-  "name": "Lista zakupów",
-  "short_name": "Zakupy",
-  "start_url": "/",
+  "name": "Plan dań + lista składników",
+  "short_name": "Plan dań",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f3f4f6",
   "theme_color": "#111827"

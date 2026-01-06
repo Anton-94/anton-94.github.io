@@ -3,28 +3,84 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Lista zakupów</title>
+    <title>Plan dań + lista składników</title>
 
-    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#111827" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
 
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<main class="card">
-    <h1>Lista zakupów</h1>
+<header class="topbar">
+    <div class="topbar__title" id="topTitle">Lista dań</div>
+    <button class="btn" id="openAddModalBtn">Dodaj</button>
+</header>
 
-    <div class="row">
-        <input id="itemInput" type="text" placeholder="Np. mleko" autocomplete="off" />
-        <button id="addBtn">Dodaj</button>
-    </div>
+<main class="content">
+    <!-- SCREEN 1: Lista dań -->
+    <section id="screenMeals" class="screen screen--active">
+        <div id="daysContainer" class="days"></div>
 
-    <ul id="list"></ul>
+        <div class="bottomDanger">
+            <button class="btn btn--danger" id="clearMealsBtn">Wyczyść</button>
+        </div>
+    </section>
 
-    <p class="hint">Tip: kliknij element, żeby go usunąć.</p>
+    <!-- SCREEN 2: Lista składników -->
+    <section id="screenIngredients" class="screen">
+        <div class="panel">
+            <div class="row">
+                <div class="field">
+                    <input id="ingredientInputMain" type="text" placeholder="Dodaj składnik..." autocomplete="off" />
+                    <div id="suggestMain" class="suggest"></div>
+                </div>
+                <button class="btn" id="addIngredientMainBtn">+</button>
+            </div>
+
+            <ul id="ingredientsList" class="list"></ul>
+        </div>
+    </section>
 </main>
 
-<script src="/app.js"></script>
+<!-- Bottom tabs -->
+<nav class="tabs">
+    <button class="tab tab--active" id="tabMeals">Lista dań</button>
+    <button class="tab" id="tabIngredients">Lista składników</button>
+</nav>
+
+<!-- MODAL: Dodaj -->
+<div class="modal" id="addModal" aria-hidden="true">
+    <div class="modal__backdrop" id="closeModalBackdrop"></div>
+    <div class="modal__card" role="dialog" aria-modal="true">
+        <div class="modal__header">
+            <div class="modal__title">Dodaj</div>
+            <button class="iconBtn" id="closeModalBtn">✕</button>
+        </div>
+
+        <div class="modal__body">
+            <label class="label">Dzień tygodnia</label>
+            <select id="daySelect" class="select"></select>
+
+            <label class="label">Nazwa dania</label>
+            <input id="mealNameInput" class="input" type="text" placeholder="Np. Kurczak z ryżem" />
+
+            <label class="label">Składniki</label>
+            <div class="row">
+                <div class="field">
+                    <input id="ingredientInputModal" class="input" type="text" placeholder="Np. ryż" autocomplete="off" />
+                    <div id="suggestModal" class="suggest"></div>
+                </div>
+                <button class="btn" id="addIngredientModalBtn">+</button>
+            </div>
+
+            <ul id="modalIngredientsList" class="list list--compact"></ul>
+
+            <button class="btn btn--primary" id="saveMealBtn">Zapisz</button>
+        </div>
+    </div>
+</div>
+
+<script src="./app.js"></script>
 </body>
 </html>

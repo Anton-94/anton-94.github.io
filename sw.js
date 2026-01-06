@@ -1,16 +1,14 @@
-const CACHE_NAME = 'shopping-pwa-v1';
+const CACHE_NAME = 'meal-pwa-v1';
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/styles.css',
-    '/app.js',
-    '/manifest.webmanifest'
+    './',
+    './index.html',
+    './styles.css',
+    './app.js',
+    './manifest.webmanifest'
 ];
 
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-    );
+    event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
     self.skipWaiting();
 });
 
