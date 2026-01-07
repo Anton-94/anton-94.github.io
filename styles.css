@@ -143,6 +143,44 @@ body{
 .liStrike{text-decoration:line-through; color:var(--muted)}
 .li--bought{opacity:0.7}
 
+.quantityControls{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-right:8px;
+}
+.quantityBtn{
+    width:28px;
+    height:28px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:#fff;
+    font-size:18px;
+    line-height:1;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+}
+.quantityBtn:hover{
+    background:var(--bg);
+}
+.quantityBtn:active{
+    background:var(--border);
+}
+.quantityDisplay{
+    min-width:24px;
+    text-align:center;
+    font-weight:600;
+    font-size:14px;
+}
+.ingredientName{
+    flex:1;
+    cursor:pointer;
+}
+
 .smallBtn{border:0; background:transparent; color:var(--danger); font-size:16px}
 
 .suggest{

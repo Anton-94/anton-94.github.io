@@ -28,7 +28,7 @@ function save(key, value) {
 function getMeals() { return load(K_MEALS, []); }
 function setMeals(v) { save(K_MEALS, v); }
 
-// Ingredients: [{id, name, bought, createdAt}]
+// Ingredients: [{id, name, bought, quantity, createdAt}]
 function getIngredients() { return load(K_ING, []); }
 function setIngredients(v) { save(K_ING, v); }
 
@@ -84,7 +84,7 @@ tabMeals.addEventListener('click', () => setScreen('meals'));
 tabIngredients.addEventListener('click', () => setScreen('ingredients'));
 
 // ===== MODAL =====
-let modalIngredients = []; // tymczasowa lista składników dla dania
+let modalIngredients = []; // tymczasowa lista składników dla dania: [{name, quantity}]
 
 function openModal() {
     addModal.classList.add('modal--open');
@@ -373,29 +373,72 @@ function bindSuggest(inputEl, boxEl, onPick) {
     });
 }
 
-bindSuggest(ingredientInputModal, suggestModal);
-bindSuggest(ingredientInputMain, suggestMain);
+bindSuggest(ingredientInputModal, suggestModal, (picked) => {
+    // Po kliknięciu na podpowiedź w modalu - od razu dodaj do listy
+    ingredientInputModal.value = picked;
+    addIngredientToModal();
+});
+
+bindSuggest(ingredientInputMain, suggestMain, (picked) => {
+    // Po kliknięciu na podpowiedź na ekranie głównym - od razu dodaj do listy
+    ingredientInputMain.value = picked;
+    addIngredientFromMain();
+});
 
 // ===== MODAL ingredients list =====
 function renderModalIngredients() {
     modalIngredientsList.innerHTML = '';
-    modalIngredients.forEach((name, idx) => {
+    modalIngredients.forEach((ing, idx) => {
         const li = document.createElement('li');
         li.className = 'li';
 
-        const left = document.createElement('span');
-        left.textContent = name;
+        const quantityControls = document.createElement('div');
+        quantityControls.className = 'quantityControls';
 
-        const btn = document.createElement('button');
-        btn.className = 'smallBtn';
-        btn.textContent = '✕';
-        btn.addEventListener('click', () => {
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'quantityBtn';
+        minusBtn.textContent = '−';
+        minusBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (ing.quantity > 1) {
+                ing.quantity--;
+                renderModalIngredients();
+            }
+        });
+
+        const quantityDisplay = document.createElement('span');
+        quantityDisplay.className = 'quantityDisplay';
+        quantityDisplay.textContent = ing.quantity;
+
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'quantityBtn';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            ing.quantity++;
+            renderModalIngredients();
+        });
+
+        quantityControls.appendChild(minusBtn);
+        quantityControls.appendChild(quantityDisplay);
+        quantityControls.appendChild(plusBtn);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'ingredientName';
+        nameSpan.textContent = ing.name;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'smallBtn';
+        deleteBtn.textContent = '✕';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             modalIngredients = modalIngredients.filter((_, i) => i !== idx);
             renderModalIngredients();
         });
 
-        li.appendChild(left);
-        li.appendChild(btn);
+        li.appendChild(quantityControls);
+        li.appendChild(nameSpan);
+        li.appendChild(deleteBtn);
         modalIngredientsList.appendChild(li);
     });
 }
@@ -417,8 +460,8 @@ function addIngredientToModal() {
     if (!value) return;
 
     // unikamy duplikatów w obrębie jednego dania
-    if (!modalIngredients.some(x => norm(x) === norm(value))) {
-        modalIngredients.push(value);
+    if (!modalIngredients.some(x => norm(x.name) === norm(value))) {
+        modalIngredients.push({ name: value, quantity: 1 });
     }
 
     addToCatalog(value);
@@ -434,16 +477,30 @@ ingredientInputModal.addEventListener('keydown', (e) => {
 });
 
 // ===== SAVE meal =====
-function ensureIngredientsAdded(ingredientNames) {
+function ensureIngredientsAdded(ingredientList) {
     const list = getIngredients();
     const map = new Map(list.map(i => [norm(i.name), i]));
 
-    ingredientNames.forEach(name => {
+    ingredientList.forEach(ing => {
+        const name = typeof ing === 'string' ? ing : ing.name;
+        const quantity = typeof ing === 'string' ? 1 : (ing.quantity || 1);
         const key = norm(name);
         if (!key) return;
         if (!map.has(key)) {
-            list.unshift({ id: uid(), name: name.trim(), bought: false, createdAt: Date.now() });
+            list.unshift({
+                id: uid(),
+                name: name.trim(),
+                quantity: quantity,
+                bought: false,
+                createdAt: Date.now()
+            });
             map.set(key, true);
+        } else {
+            // Jeśli składnik już istnieje, aktualizuj quantity (sumuj)
+            const existing = list.find(i => norm(i.name) === key);
+            if (existing) {
+                existing.quantity = (existing.quantity || 1) + quantity;
+            }
         }
     });
 
@@ -472,7 +529,7 @@ saveMealBtn.addEventListener('click', () => {
         id: uid(),
         day,
         name: mealName,
-        ingredients: [...modalIngredients],
+        ingredients: modalIngredients.map(ing => typeof ing === 'string' ? { name: ing, quantity: 1 } : ing),
         order: nextOrder
     });
 
@@ -503,12 +560,53 @@ function renderIngredients() {
             li.classList.add('li--bought');
         }
 
-        const name = document.createElement('span');
-        name.textContent = item.name;
-        if (item.bought) name.className = 'liStrike';
+        const quantityControls = document.createElement('div');
+        quantityControls.className = 'quantityControls';
 
-        // Kliknięcie na cały wiersz zmienia status
-        li.addEventListener('click', () => {
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'quantityBtn';
+        minusBtn.textContent = '−';
+        minusBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const all = getIngredients();
+            const idx = all.findIndex(x => x.id === item.id);
+            if (idx >= 0 && all[idx].quantity > 1) {
+                all[idx].quantity--;
+                setIngredients(all);
+                renderIngredients();
+            }
+        });
+
+        const quantityDisplay = document.createElement('span');
+        quantityDisplay.className = 'quantityDisplay';
+        quantityDisplay.textContent = item.quantity || 1;
+
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'quantityBtn';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const all = getIngredients();
+            const idx = all.findIndex(x => x.id === item.id);
+            if (idx >= 0) {
+                all[idx].quantity = (all[idx].quantity || 1) + 1;
+                setIngredients(all);
+                renderIngredients();
+            }
+        });
+
+        quantityControls.appendChild(minusBtn);
+        quantityControls.appendChild(quantityDisplay);
+        quantityControls.appendChild(plusBtn);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'ingredientName';
+        nameSpan.textContent = item.name;
+        if (item.bought) nameSpan.className = 'ingredientName liStrike';
+
+        // Kliknięcie na nazwę zmienia status
+        nameSpan.addEventListener('click', (e) => {
+            e.stopPropagation();
             const all = getIngredients();
             const idx = all.findIndex(x => x.id === item.id);
             if (idx >= 0) {
@@ -518,7 +616,8 @@ function renderIngredients() {
             }
         });
 
-        li.appendChild(name);
+        li.appendChild(quantityControls);
+        li.appendChild(nameSpan);
         ingredientsList.appendChild(li);
     });
 }
@@ -530,12 +629,21 @@ function addIngredientFromMain() {
     addToCatalog(value);
 
     const list = getIngredients();
-    const exists = list.some(x => norm(x.name) === norm(value));
-    if (!exists) {
-        list.unshift({ id: uid(), name: value, bought: false, createdAt: Date.now() });
-        setIngredients(list);
-        renderIngredients();
+    const existingIdx = list.findIndex(x => norm(x.name) === norm(value));
+    if (existingIdx >= 0) {
+        // Jeśli składnik już istnieje, zwiększ quantity
+        list[existingIdx].quantity = (list[existingIdx].quantity || 1) + 1;
+    } else {
+        list.unshift({
+            id: uid(),
+            name: value,
+            quantity: 1,
+            bought: false,
+            createdAt: Date.now()
+        });
     }
+    setIngredients(list);
+    renderIngredients();
 
     ingredientInputMain.value = '';
     ingredientInputMain.focus();
