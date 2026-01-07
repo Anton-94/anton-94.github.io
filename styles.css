@@ -63,8 +63,12 @@ body{
 }
 .mealName{font-size:14px}
 .mealActions{display:flex; gap:10px; align-items:center}
-.handle{opacity:.5; font-size:18px; user-select:none}
+.handle{opacity:.5; font-size:18px; user-select:none; cursor:grab}
+.handle:active{cursor:grabbing}
 .deleteBtn{border:0; background:transparent; color:var(--danger); font-size:16px}
+.mealRow.dragging{opacity:0.5}
+.dayCard.drag-over{border-color:var(--primary); background:#f9fafb}
+.mealsContainer{min-height:20px}
 
 .bottomDanger{margin:14px 0 0}
 
@@ -125,7 +129,19 @@ body{
     margin-top:8px;
     background:#fff;
 }
+.list--compact .li{
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--border);
+    border-radius:0;
+    padding:8px 4px;
+    margin-top:0;
+}
+.list--compact .li:last-child{
+    border-bottom:none;
+}
 .liStrike{text-decoration:line-through; color:var(--muted)}
+.li--bought{opacity:0.7}
 
 .smallBtn{border:0; background:transparent; color:var(--danger); font-size:16px}
 
@@ -142,9 +158,10 @@ body{
     padding:10px 12px;
     border-top:1px solid var(--border);
     cursor:pointer;
+    background:#f3f4f6;
 }
 .suggest__item:first-child{border-top:0}
-.suggest__item:hover{background:#f9fafb}
+.suggest__item:hover{background:#e5e7eb}
 
 /* Modal */
 .modal{position:fixed; inset:0; display:none; z-index:100}
