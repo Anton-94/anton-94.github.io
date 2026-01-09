@@ -48,6 +48,11 @@ body{
     border:1px solid var(--border);
     border-radius:16px;
     padding:10px;
+    cursor:pointer;
+    transition:background 0.2s;
+}
+.dayCard:hover{
+    background:#f9fafb;
 }
 .dayHeader{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
 .dayTitle{font-weight:700}

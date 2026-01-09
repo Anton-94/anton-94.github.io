@@ -86,15 +86,19 @@ tabIngredients.addEventListener('click', () => setScreen('ingredients'));
 // ===== MODAL =====
 let modalIngredients = []; // tymczasowa lista składników dla dania: [{name, quantity}]
 
-function openModal() {
+function openModal(dayIndex = null) {
     addModal.classList.add('modal--open');
     addModal.setAttribute('aria-hidden', 'false');
     mealNameInput.value = '';
     ingredientInputModal.value = '';
     modalIngredients = [];
     renderModalIngredients();
-    // domyślnie: dzisiaj
-    daySelect.value = String(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+    // domyślnie: dzisiaj lub wybrany dzień
+    if (dayIndex !== null) {
+        daySelect.value = String(dayIndex);
+    } else {
+        daySelect.value = String(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+    }
     mealNameInput.focus();
 }
 
@@ -317,6 +321,16 @@ function renderMeals() {
 
         card.appendChild(mealsContainer);
         setupDropZone(card, dayIndex, mealsContainer);
+        
+        // Kliknięcie na kafelek dnia otwiera modal z ustawionym dniem
+        card.addEventListener('click', (e) => {
+            // Nie otwieraj modala jeśli kliknięto na mealRow lub jego elementy
+            if (e.target.closest('.mealRow')) {
+                return;
+            }
+            openModal(dayIndex);
+        });
+        
         daysContainer.appendChild(card);
     });
 }
