@@ -85,10 +85,16 @@ tabIngredients.addEventListener('click', () => setScreen('ingredients'));
 
 // ===== MODAL =====
 let modalIngredients = []; // tymczasowa lista składników dla dania: [{name, quantity}]
+let editingMealId = null; // ID edytowanego dania (null = nowe danie)
 
 function openModal(dayIndex = null) {
+    editingMealId = null;
     addModal.classList.add('modal--open');
     addModal.setAttribute('aria-hidden', 'false');
+    
+    // Zmień tytuł na "Dodaj"
+    document.querySelector('.modal__title').textContent = 'Dodaj';
+    
     mealNameInput.value = '';
     ingredientInputModal.value = '';
     modalIngredients = [];
@@ -99,6 +105,35 @@ function openModal(dayIndex = null) {
     } else {
         daySelect.value = String(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
     }
+    mealNameInput.focus();
+}
+
+function openEditModal(meal) {
+    editingMealId = meal.id;
+    addModal.classList.add('modal--open');
+    addModal.setAttribute('aria-hidden', 'false');
+    
+    // Zmień tytuł na "Edytuj"
+    document.querySelector('.modal__title').textContent = 'Edytuj';
+    
+    // Wypełnij formularz danymi dania
+    daySelect.value = String(meal.day !== undefined ? meal.day : meal.dayIndex);
+    mealNameInput.value = meal.name;
+    
+    // Załaduj składniki
+    modalIngredients = [];
+    if (meal.ingredients && meal.ingredients.length > 0) {
+        meal.ingredients.forEach(ing => {
+            if (typeof ing === 'string') {
+                modalIngredients.push({ name: ing, quantity: 1 });
+            } else {
+                modalIngredients.push({ name: ing.name, quantity: ing.quantity || 1 });
+            }
+        });
+    }
+    
+    renderModalIngredients();
+    ingredientInputModal.value = '';
     mealNameInput.focus();
 }
 
@@ -284,15 +319,47 @@ function renderMeals() {
         mealsContainer.className = 'mealsContainer';
 
         dayMeals.forEach(m => {
+            const mealCard = document.createElement('div');
+            mealCard.className = 'mealCard';
+
             const row = document.createElement('div');
             row.className = 'mealRow';
 
             const left = document.createElement('div');
-            left.className = 'mealName';
-            left.textContent = m.name;
+            left.className = 'mealInfo';
+
+            const mealName = document.createElement('div');
+            mealName.className = 'mealName';
+            mealName.textContent = m.name;
+
+            left.appendChild(mealName);
+
+            // Wyświetl składniki jeśli istnieją
+            if (m.ingredients && m.ingredients.length > 0) {
+                const ingredientsDiv = document.createElement('div');
+                ingredientsDiv.className = 'mealIngredients';
+                
+                const ingredientsText = m.ingredients
+                    .map(ing => {
+                        if (typeof ing === 'string') return ing;
+                        return ing.quantity > 1 ? `${ing.name} (${ing.quantity})` : ing.name;
+                    })
+                    .join(', ');
+                
+                ingredientsDiv.textContent = ingredientsText;
+                left.appendChild(ingredientsDiv);
+            }
 
             const actions = document.createElement('div');
             actions.className = 'mealActions';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'actionBtn';
+            editBtn.textContent = '✏️';
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(m);
+            });
 
             const handle = document.createElement('div');
             handle.className = 'handle';
@@ -309,14 +376,16 @@ function renderMeals() {
                 renderMeals();
             });
 
+            actions.appendChild(editBtn);
             actions.appendChild(handle);
             actions.appendChild(del);
 
             row.appendChild(left);
             row.appendChild(actions);
 
+            mealCard.appendChild(row);
             setupDragAndDrop(row, m.id, dayIndex);
-            mealsContainer.appendChild(row);
+            mealsContainer.appendChild(mealCard);
         });
 
         card.appendChild(mealsContainer);
@@ -324,8 +393,8 @@ function renderMeals() {
         
         // Kliknięcie na kafelek dnia otwiera modal z ustawionym dniem
         card.addEventListener('click', (e) => {
-            // Nie otwieraj modala jeśli kliknięto na mealRow lub jego elementy
-            if (e.target.closest('.mealRow')) {
+            // Nie otwieraj modala jeśli kliknięto na mealCard lub jego elementy
+            if (e.target.closest('.mealCard')) {
                 return;
             }
             openModal(dayIndex);
@@ -531,21 +600,50 @@ saveMealBtn.addEventListener('click', () => {
         return;
     }
 
-    // dodaj do listy dań
     const meals = getMeals().map(migrateMealData);
-    const dayMeals = meals.filter(m => m.day === day);
-    const maxOrder = dayMeals.length > 0
-        ? Math.max(...dayMeals.map(m => m.order ?? 0))
-        : -1;
-    const nextOrder = maxOrder + 1;
+    
+    if (editingMealId) {
+        // EDYCJA istniejącego dania
+        const mealIndex = meals.findIndex(m => m.id === editingMealId);
+        if (mealIndex >= 0) {
+            const oldDay = meals[mealIndex].day;
+            
+            // Aktualizuj danie
+            meals[mealIndex].name = mealName;
+            meals[mealIndex].day = day;
+            meals[mealIndex].ingredients = modalIngredients.map(ing => 
+                typeof ing === 'string' ? { name: ing, quantity: 1 } : ing
+            );
+            
+            // Jeśli zmieniono dzień, przelicz order
+            if (oldDay !== day) {
+                // Usuń z poprzedniego dnia i przelicz order
+                const oldDayMeals = meals.filter(m => m.day === oldDay && m.id !== editingMealId);
+                oldDayMeals.forEach((m, idx) => {
+                    m.order = idx;
+                });
+                
+                // Dodaj do nowego dnia na końcu
+                const newDayMeals = meals.filter(m => m.day === day && m.id !== editingMealId);
+                meals[mealIndex].order = newDayMeals.length;
+            }
+        }
+    } else {
+        // DODAWANIE nowego dania
+        const dayMeals = meals.filter(m => m.day === day);
+        const maxOrder = dayMeals.length > 0 
+            ? Math.max(...dayMeals.map(m => m.order ?? 0))
+            : -1;
+        const nextOrder = maxOrder + 1;
 
-    meals.push({
-        id: uid(),
-        day,
-        name: mealName,
-        ingredients: modalIngredients.map(ing => typeof ing === 'string' ? { name: ing, quantity: 1 } : ing),
-        order: nextOrder
-    });
+        meals.push({
+            id: uid(),
+            day,
+            name: mealName,
+            ingredients: modalIngredients.map(ing => typeof ing === 'string' ? { name: ing, quantity: 1 } : ing),
+            order: nextOrder
+        });
+    }
 
     setMeals(meals);
 
@@ -621,17 +719,52 @@ function renderIngredients() {
         // Kliknięcie na nazwę zmienia status
         nameSpan.addEventListener('click', (e) => {
             e.stopPropagation();
-            const all = getIngredients();
-            const idx = all.findIndex(x => x.id === item.id);
-            if (idx >= 0) {
-                all[idx].bought = !all[idx].bought;
-                setIngredients(all);
-                renderIngredients();
+            
+            // Dodaj klasę dla animacji
+            if (!item.bought) {
+                li.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                li.style.opacity = '0.7';
+                li.style.transform = 'translateX(10px)';
+                nameSpan.classList.add('liStrike');
+            } else {
+                li.style.opacity = '1';
+                li.style.transform = 'translateX(0)';
+                nameSpan.classList.remove('liStrike');
             }
+            
+            // Opóźnij zapis i re-render dla płynnej animacji
+            setTimeout(() => {
+                const all = getIngredients();
+                const idx = all.findIndex(x => x.id === item.id);
+                if (idx >= 0) {
+                    all[idx].bought = !all[idx].bought;
+                    setIngredients(all);
+                    renderIngredients();
+                }
+            }, 150);
+        });
+
+        // Przycisk usuwania składnika
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'deleteBtn';
+        deleteBtn.textContent = '✕';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Animacja usuwania
+            li.classList.add('removing');
+            
+            setTimeout(() => {
+                const all = getIngredients();
+                const filtered = all.filter(x => x.id !== item.id);
+                setIngredients(filtered);
+                renderIngredients();
+            }, 200); // Czas trwania animacji
         });
 
         li.appendChild(quantityControls);
         li.appendChild(nameSpan);
+        li.appendChild(deleteBtn);
         ingredientsList.appendChild(li);
     });
 }

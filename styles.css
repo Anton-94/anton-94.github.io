@@ -58,19 +58,42 @@ body{
 .dayTitle{font-weight:700}
 .dayHint{font-size:12px; color:var(--muted)}
 
+.mealCard{
+    margin-top:8px;
+}
 .mealRow{
     display:flex; align-items:center; justify-content:space-between;
     padding:10px;
     border:1px solid var(--border);
     border-radius:14px;
-    margin-top:8px;
     background:#fff;
 }
-.mealName{font-size:14px}
+.mealInfo{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+.mealName{
+    font-size:14px;
+    font-weight:600;
+}
+.mealIngredients{
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.4;
+}
 .mealActions{display:flex; gap:10px; align-items:center}
+.actionBtn{
+    border:0;
+    background:transparent;
+    font-size:16px;
+    padding:4px;
+    cursor:pointer;
+}
 .handle{opacity:.5; font-size:18px; user-select:none; cursor:grab}
 .handle:active{cursor:grabbing}
-.deleteBtn{border:0; background:transparent; color:var(--danger); font-size:16px}
+.deleteBtn{border:0; background:transparent; color:var(--danger); font-size:16px; padding:4px; cursor:pointer}
 .mealRow.dragging{opacity:0.5}
 .dayCard.drag-over{border-color:var(--primary); background:#f9fafb}
 .mealsContainer{min-height:20px}
@@ -133,6 +156,11 @@ body{
     border-radius:14px;
     margin-top:8px;
     background:#fff;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+}
+.li.removing{
+    opacity:0;
+    transform:translateX(-20px);
 }
 .list--compact .li{
     background:transparent;
@@ -152,12 +180,20 @@ body{
     border-radius:0;
     padding:10px 0;
     margin-top:0;
+    transition:opacity 0.3s ease, transform 0.3s ease;
 }
 #ingredientsList .li:last-child{
     border-bottom:none;
 }
-.liStrike{text-decoration:line-through; color:var(--muted)}
-.li--bought{opacity:0.7}
+.liStrike{
+    text-decoration:line-through; 
+    color:var(--muted);
+    transition:all 0.3s ease;
+}
+.li--bought{
+    opacity:0.7;
+    transform:translateX(10px);
+}
 
 .quantityControls{
     display:flex;
@@ -222,16 +258,30 @@ body{
 .modal--open{display:block}
 .modal__backdrop{position:absolute; inset:0; background:rgba(0,0,0,.35)}
 .modal__card{
-    position:absolute; left:12px; right:12px; top:10%;
+    position:absolute; 
+    left:12px; 
+    right:12px; 
+    top:5%; 
+    bottom:5%;
+    max-height:90vh;
     background:#fff;
     border-radius:18px;
     border:1px solid var(--border);
     overflow:hidden;
+    display:flex;
+    flex-direction:column;
 }
 .modal__header{
-    display:flex; justify-content:space-between; align-items:center;
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center;
     padding:12px 12px;
     border-bottom:1px solid var(--border);
+    flex-shrink:0;
 }
 .modal__title{font-weight:800}
-.modal__body{padding:12px}
+.modal__body{
+    padding:12px;
+    overflow-y:auto;
+    flex:1;
+}
