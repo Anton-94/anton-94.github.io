@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policymap>
+    <!-- <policy domain="resource" name="temporary-path" value="/tmp"/> -->
+    <!-- <policy domain="resource" name="memory" value="2GiB"/> -->
+    <!-- <policy domain="resource" name="map" value="4GiB"/> -->
+    <!-- <policy domain="resource" name="area" value="1GB"/> -->
+     <policy domain="resource" name="disk" value="12GiB"/>
+    <!-- <policy domain="resource" name="file" value="768"/> -->s
+    <!-- <policy domain="resource" name="thread" value="4"/> -->
+    <!-- <policy domain="resource" name="throttle" value="0"/> -->
+    <!-- <policy domain="resource" name="time" value="3600"/> -->
+    <!-- <policy domain="system" name="precision" value="6"/> -->
+    <policy domain="delegate" rights="none" pattern="URL" />
+    <policy domain="delegate" rights="none" pattern="HTTPS" />
+    <policy domain="delegate" rights="none" pattern="HTTP" />
+    <!-- in order to avoid to get image with password text -->
+    <policy domain="path" rights="none" pattern="@*"/>
+    <!-- disable ghostscript format types -->
+    <policy domain="coder" rights="none" pattern="PS" />
+    <policy domain="coder" rights="none" pattern="PS2" />
+    <policy domain="coder" rights="none" pattern="PS3" />
+    <policy domain="coder" rights="none" pattern="EPS" />
+    <policy domain="coder" rights="none" pattern="PDF" />
+    <policy domain="coder" rights="none" pattern="XPS" />
+
+</policymap>
