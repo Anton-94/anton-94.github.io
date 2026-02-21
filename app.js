@@ -1,3 +1,7 @@
+// ===== VERSION =====
+const APP_VERSION = '1.0.0';
+const DATA_VERSION = 'v1';
+
 // ===== PWA =====
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
@@ -10,6 +14,8 @@ if ('serviceWorker' in navigator) {
 const K_MEALS = 'meals_v1';
 const K_ING = 'ingredients_v1';
 const K_CAT = 'catalog_v1';
+const K_APP_VER = 'app_version';
+const K_DATA_VER = 'data_version';
 
 const DAYS = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
 
@@ -801,8 +807,42 @@ ingredientInputMain.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') addIngredientFromMain();
 });
 
+// ===== VERSION CHECK =====
+function checkVersion() {
+    const savedVersion = localStorage.getItem(K_APP_VER);
+    const savedDataVersion = localStorage.getItem(K_DATA_VER);
+    
+    if (!savedVersion) {
+        // Pierwsza instalacja
+        localStorage.setItem(K_APP_VER, APP_VERSION);
+        localStorage.setItem(K_DATA_VER, DATA_VERSION);
+        console.log(`✅ Aplikacja zainstalowana: v${APP_VERSION}`);
+    } else if (savedVersion !== APP_VERSION) {
+        // Aktualizacja
+        console.log(`🔄 Aktualizacja: v${savedVersion} → v${APP_VERSION}`);
+        console.log(`📦 Dane użytkownika: ${getMeals().length} dań, ${getIngredients().length} składników`);
+        console.log(`✅ Dane zachowane!`);
+        
+        localStorage.setItem(K_APP_VER, APP_VERSION);
+        
+        // Tutaj można dodać migracje danych jeśli potrzebne
+        // if (savedDataVersion === 'v1' && DATA_VERSION === 'v2') {
+        //     migratev1tov2();
+        // }
+    } else {
+        console.log(`✅ Aplikacja v${APP_VERSION}`);
+    }
+}
+
 // ===== INIT =====
+checkVersion();
 initDaySelect();
 setScreen('meals');
 renderMeals();
 renderIngredients();
+
+// Wyświetl wersję
+const versionEl = document.getElementById('appVersion');
+if (versionEl) {
+    versionEl.textContent = `v${APP_VERSION}`;
+}

@@ -118,6 +118,16 @@ body{
 }
 .tab--active{border-color:#111827; font-weight:700}
 
+.version{
+    position:fixed;
+    bottom:70px;
+    right:12px;
+    font-size:10px;
+    color:var(--muted);
+    opacity:0.5;
+    pointer-events:none;
+}
+
 .panel{
     background:var(--card);
     border:1px solid var(--border);
